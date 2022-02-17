@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { nanoid } from 'nanoid';
-import { checkSession, gistApiUpdate } from './gitHelper.js';
+import { checkSession } from './gitHelper.js';
 import { gistInit, removeLocalFile, updateLocalFile, updateLocalFileContent, commitChanges } from './gistHelper.js';
 
 const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experience', 'skills', 'awards'],
@@ -70,25 +70,18 @@ const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experi
 				content = JSON.parse(req?.body?.content),
 				isImageModified = content?.image?.isModified,
 				oldProfile = await checkSession(gistID, githubToken, profileFileName);
-			let newProfile = '';
 
-			if (req.file || isImageModified) {
-				await gistInit(gistID, githubToken);
-				((req?.file?.path && content.picture) || (!req?.file?.path && isImageModified)) && removeLocalFile(gistID, content.picture);
-				isImageModified && (content.picture = req?.file?.path ? `Z${nanoid()}.jpg` : '');
+			await gistInit(gistID, githubToken);
+			((req?.file?.path && content.picture) || (!req?.file?.path && isImageModified)) && removeLocalFile(gistID, content.picture);
+			isImageModified && (content.picture = req?.file?.path ? `Z${nanoid()}.jpg` : '');
 
-				newProfile = generateNewProfile(oldProfile, field, content);
+			const newProfile = generateNewProfile(oldProfile, field, content);
 
-				await Promise.all([
-					updateLocalFile(gistID, req?.file?.path, content.picture),
-					updateLocalFileContent(gistID, profileFileName, newProfile)
-				]);
-				await commitChanges(field);
-			}
-			else {
-				newProfile = generateNewProfile(oldProfile, field, content);
-				await gistApiUpdate(gistID, githubToken, profileFileName, newProfile);
-			}
+			await Promise.all([
+				updateLocalFile(gistID, req?.file?.path, content.picture),
+				updateLocalFileContent(gistID, profileFileName, newProfile)
+			]);
+			await commitChanges(field);
 
 			return res.status(200).json(newProfile);
 		}

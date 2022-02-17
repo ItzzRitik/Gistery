@@ -19,30 +19,6 @@ const gitFetch = async (githubToken, query) => {
 			}
 		});
 	},
-	gistApiUpdate = async (gistID, githubToken, fileName, fileContent) => {
-		return new Promise(async (resolve, reject) => {
-			try {
-				const options = {
-						method: 'PATCH',
-						headers: {
-							Accept: 'application/vnd.github.v3.json',
-							Authorization: `token ${githubToken}`
-						},
-						body: JSON.stringify({
-							files: {
-								[fileName]: { content: JSON.stringify(fileContent, null, 4) }
-							}
-						})
-					},
-					request = await fetch(`https://api.github.com/gists/${gistID}`, options),
-					response = await request.json();
-				return resolve(response);
-			}
-			catch (e) {
-				return reject(e);
-			}
-		});
-	},
 	checkSession = async (gistID, githubToken, fileName) => {
 		return new Promise(async (resolve, reject) => {
 			try {
@@ -81,4 +57,4 @@ const gitFetch = async (githubToken, query) => {
 		});
 	};
 
-export { gitFetch, checkSession, gistApiUpdate };
+export { gitFetch, checkSession };
