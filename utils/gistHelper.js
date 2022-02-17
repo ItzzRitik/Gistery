@@ -1,13 +1,17 @@
+import 'dotenv/config';
 import fs from 'fs';
 import sharp from 'sharp';
 import simpleGit from 'simple-git';
 
 const git = simpleGit(),
 	profileDir = '.profile',
-	preProcess = () => {
-		if (!fs.existsSync(profileDir)) {
-			fs.mkdirSync(profileDir);
-		}
+	preProcess = async () => {
+		const userName = await git.getConfig('user.name', 'global'),
+			userEmail = await git.getConfig('user.email', 'global');
+
+		!fs.existsSync(profileDir) && fs.mkdirSync(profileDir);
+		!userName.value && await git.addConfig('user.name', process.env.USER_NAME, false, 'global');
+		!userEmail.value && await git.addConfig('user.email', process.env.USER_EMAIL, false, 'global');
 	},
 
 	switchToGist = async (gistID, githubToken) => {
@@ -70,7 +74,6 @@ const git = simpleGit(),
 	commitChanges = async (field) => {
 		return new Promise(async (resolve, reject) => {
 			try {
-				console.log('Commiting changes');
 				await git.add('.');
 				await git.commit(`Updated ${field}`);
 				return resolve(await git.push());
