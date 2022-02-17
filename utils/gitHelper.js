@@ -1,47 +1,58 @@
 import _ from 'lodash';
 import fetch from 'node-fetch';
 
-const gitFetch = async (route = '', gitToken, options = {}) => {
+const gitFetch = async (githubToken, query) => {
 		return new Promise(async (resolve, reject) => {
 			try {
-				options = _.merge({ headers: { Authorization: `token ${gitToken}` } }, options);
-				const request = await fetch(`https://api.github.com${route}`, options),
+				const options = {
+						method: 'POST',
+						headers: { Authorization: `token ${githubToken}` },
+						body: JSON.stringify({ query })
+					},
+					request = await fetch('https://api.github.com/graphql', options),
 					response = await request.json();
-				return resolve(response);
-			}
-			catch (e) {
-				return reject(e);
-			}
-		});
-	},
-	gistFetch = async (gistID, gitToken, options = {}) => {
-		return new Promise(async (resolve, reject) => {
-			try {
-				options = _.merge({ headers: { Accept: 'application/vnd.github.v3.json' } }, options);
-				const gist = await gitFetch(`/gists/${gistID}`, gitToken, options);
 
-				return resolve(gist);
+				return resolve(response.data.viewer);
 			}
 			catch (e) {
 				return reject(e);
 			}
 		});
 	},
-	checkSession = async (gitToken, gistID) => {
+	checkSession = async (gistID, githubToken) => {
 		return new Promise(async (resolve, reject) => {
 			try {
-				const [user, gist] = await Promise.all([
-					gitFetch('/user', gitToken),
-					gistFetch(gistID, gitToken)
-				]);
-				console.log('user', gist);
-				console.log('gist', gist);
-				return resolve(gist);
+				const gitLoginQuery = `
+						{ 
+							viewer {
+								login
+							}
+						}
+					`,
+					gistLoginQuery = `
+						{ 
+							viewer { 
+								gist(name:"${gistID}") {
+									owner {
+										login
+									}
+								}
+							}
+						}
+					`,
+					[{ login }, { gist }] = await Promise.all([
+						gitFetch(githubToken, gitLoginQuery),
+						gitFetch(githubToken, gistLoginQuery)
+					]);
+
+				if (login.toLowerCase() === gist?.owner?.login.toLowerCase()) return resolve();
+
+				return reject({ code: 403, message: 'Gist owner is not the same as the user' });
 			}
-			catch (e) {
-				return reject(e);
+			catch (err) {
+				return reject(err);
 			}
 		});
 	};
 
-export { gitFetch, gistFetch, checkSession };
+export { gitFetch, checkSession };

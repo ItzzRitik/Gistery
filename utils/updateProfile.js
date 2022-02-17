@@ -10,23 +10,23 @@ const updateViaCommit = async () => {
 
 	updateProfile = async (req, res) => {
 		try {
-			const { gistid: gistID, githubtoken: gitToken } = req.headers,
+			const { gistid: gistID, githubtoken: githubToken } = req.headers,
 				field = req?.body?.field,
 				content = JSON.parse(req?.body?.content),
 				isImageModified = content?.image?.isModified;
 
-			checkSession(gistID, gitToken);
+			await checkSession(gistID, githubToken);
 
 			// oldProfile = await gistInit(gistID);
-
+			res.status(403).json({ errorMessage: 'Authentication Required' });
 			if (req.file) {
 				const response = await updateViaCommit(req?.file?.path, req?.body?.profile);
 			}
 
 			const response = updateViaApi();
 		}
-		catch {
-
+		catch ({ code, message }) {
+			res.status(code).json({ errorMessage: message });
 		}
 	};
 
