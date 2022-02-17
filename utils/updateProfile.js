@@ -1,34 +1,14 @@
 import _ from 'lodash';
 import { nanoid } from 'nanoid';
-import { checkSession } from './gitHelper.js';
+import { checkSession, gistApiUpdate } from './gitHelper.js';
 import { gistInit, removeLocalFile, updateLocalFile, updateLocalFileContent, commitChanges } from './gistHelper.js';
 
-const updateViaCommit = async (gistID, file, profile) => {
-		return new Promise(async (resolve, reject) => {
-			try {
-				await gistInit();
-			}
-			catch (err) {
-				return reject(err);
-			}
-		});
-
-	},
-	updateViaApi = async (gistID, githubToken, profile) => {
-		return new Promise(async (resolve, reject) => {
-			try {
-			}
-			catch (err) {
-				return reject(err);
-			}
-		});
-	},
-	preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experience', 'skills', 'awards'],
+const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experience', 'skills', 'awards'],
 	missingFields = (mandatoryFields, provided) =>
 		mandatoryFields.filter((item) => !provided.includes(item)).reduce((acc, item) => `${acc}\n${item}`, ''),
 
 	validate = {
-		trim: (obj) => Object.keys(obj).forEach((key) => (obj[key] = obj[key].trim())),
+		trim: (obj) => Object.keys(obj).forEach((key) => (obj[key] = obj[key]?.trim?.())),
 		experience: (experience) => {
 			const preferredOrder = ['id', 'companyName', 'roleName', 'roleType', 'fromDate', 'toDate', 'location', 'url', 'picture', 'description'],
 				mandatoryFields = ['companyName', 'roleName', 'fromDate', 'toDate', 'location', 'url'];
@@ -92,11 +72,12 @@ const updateViaCommit = async (gistID, file, profile) => {
 				oldProfile = await checkSession(gistID, githubToken, profileFileName);
 
 			((req?.file?.path && content.picture) || (!req?.file?.path && isImageModified)) && removeLocalFile(gistID, content.picture);
-			isImageModified && (content.picture = req?.file?.path ? `Z${nanoid()}.jpg` : null);
+			isImageModified && (content.picture = req?.file?.path ? `Z${nanoid()}.jpg` : '');
 
 			const newProfile = generateNewProfile(oldProfile, field, content);
 
 			if (req.file || isImageModified) {
+				await gistInit(gistID, githubToken);
 				await Promise.all([
 					updateLocalFile(gistID, req?.file?.path, content.picture),
 					updateLocalFileContent(gistID, profileFileName, newProfile)
@@ -104,14 +85,13 @@ const updateViaCommit = async (gistID, file, profile) => {
 				await commitChanges(field);
 			}
 			else {
-
+				await gistApiUpdate(gistID, githubToken, profileFileName, newProfile);
 			}
-			return res.status(200).json(newProfile);
 
-			// const response = updateViaApi(githubToken, newProfile);
+			return res.status(200).json(newProfile);
 		}
 		catch ({ code = 503, message }) {
-			console.err(message);
+			console.log(message);
 			res.status(code).json({ errorMessage: message });
 		}
 	};
