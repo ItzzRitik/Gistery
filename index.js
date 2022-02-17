@@ -1,16 +1,15 @@
-const express = require('express'),
-	app = express(),
-	multer = require('multer'),
+import 'dotenv/config';
+import express from 'express';
+import multer from 'multer';
+import updateProfile from './utils/updateProfile.js';
+
+const app = express(),
 	upload = multer({
 		storage: multer.diskStorage({
 			destination: 'public',
 			filename: (req, file, cb) => cb(null, file.originalname)
 		})
-	}),
-
-	updateProfile = require('./utils/updateProfile');
-
-require('dotenv').config();
+	});
 
 app.post('/updateProfile', upload.single('file'), updateProfile);
 

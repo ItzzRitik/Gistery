@@ -1,6 +1,8 @@
-const fs = require('fs'),
-	sharp = require('sharp'),
-	git = require('simple-git')(),
+import fs from 'fs';
+import sharp from 'sharp';
+import simpleGit from 'simple-git';
+
+const git = simpleGit(),
 
 	profileDir = '.profile',
 	gistInit = async (gistID) => {
@@ -25,4 +27,4 @@ const fs = require('fs'),
 		});
 	};
 
-module.exports = { gistInit };
+export { gistInit };
