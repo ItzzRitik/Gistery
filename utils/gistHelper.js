@@ -70,7 +70,8 @@ const git = simpleGit(),
 	commitChanges = async (field) => {
 		return new Promise(async (resolve, reject) => {
 			try {
-				await git.add('./*');
+				console.log('Commiting changes');
+				await git.add('.');
 				await git.commit(`Updated ${field}`);
 				return resolve(await git.push());
 			}
