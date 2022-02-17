@@ -70,14 +70,15 @@ const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experi
 				content = JSON.parse(req?.body?.content),
 				isImageModified = content?.image?.isModified,
 				oldProfile = await checkSession(gistID, githubToken, profileFileName);
-
-			((req?.file?.path && content.picture) || (!req?.file?.path && isImageModified)) && removeLocalFile(gistID, content.picture);
-			isImageModified && (content.picture = req?.file?.path ? `Z${nanoid()}.jpg` : '');
-
-			const newProfile = generateNewProfile(oldProfile, field, content);
+			let newProfile = '';
 
 			if (req.file || isImageModified) {
 				await gistInit(gistID, githubToken);
+				((req?.file?.path && content.picture) || (!req?.file?.path && isImageModified)) && removeLocalFile(gistID, content.picture);
+				isImageModified && (content.picture = req?.file?.path ? `Z${nanoid()}.jpg` : '');
+
+				newProfile = generateNewProfile(oldProfile, field, content);
+
 				await Promise.all([
 					updateLocalFile(gistID, req?.file?.path, content.picture),
 					updateLocalFileContent(gistID, profileFileName, newProfile)
@@ -85,6 +86,7 @@ const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experi
 				await commitChanges(field);
 			}
 			else {
+				newProfile = generateNewProfile(oldProfile, field, content);
 				await gistApiUpdate(gistID, githubToken, profileFileName, newProfile);
 			}
 

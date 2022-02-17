@@ -2,9 +2,10 @@ import 'dotenv/config';
 import fs from 'fs';
 import sharp from 'sharp';
 import simpleGit from 'simple-git';
+import path from 'path';
 
 const git = simpleGit(),
-	profileDir = '.profile',
+	profileDir = path.join(process.cwd(), '.profile'),
 	preProcess = async () => {
 		const userName = await git.getConfig('user.name', 'global'),
 			userEmail = await git.getConfig('user.email', 'global');
