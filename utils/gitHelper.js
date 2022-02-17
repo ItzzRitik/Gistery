@@ -19,7 +19,7 @@ const gitFetch = async (githubToken, query) => {
 			}
 		});
 	},
-	checkSession = async (gistID, githubToken) => {
+	checkSession = async (gistID, githubToken, fileName) => {
 		return new Promise(async (resolve, reject) => {
 			try {
 				const gitLoginQuery = `
@@ -33,9 +33,8 @@ const gitFetch = async (githubToken, query) => {
 						{ 
 							viewer { 
 								gist(name:"${gistID}") {
-									owner {
-										login
-									}
+									owner { login }
+									${fileName ? 'files { name text }' : ''}
 								}
 							}
 						}
@@ -43,11 +42,14 @@ const gitFetch = async (githubToken, query) => {
 					[{ login }, { gist }] = await Promise.all([
 						gitFetch(githubToken, gitLoginQuery),
 						gitFetch(githubToken, gistLoginQuery)
-					]);
+					]),
+					fileContent = gist?.files?.reduce((acc, file) => (file.name === fileName ? file.text : acc));
 
-				if (login.toLowerCase() === gist?.owner?.login.toLowerCase()) return resolve();
+				if (login.toLowerCase() === gist?.owner?.login.toLowerCase()) {
+					return resolve(fileContent ? JSON.parse(fileContent) : null);
+				}
 
-				return reject({ code: 403, message: 'Gist owner is not the same as the user' });
+				return reject({ code: 403, message: 'Forbidden! Provided user isn\'t the owner of gist' });
 			}
 			catch (err) {
 				return reject(err);
