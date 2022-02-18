@@ -16,7 +16,7 @@ const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experi
 			experience = _.pick(experience, preferredOrder);
 
 			const missing = missingFields(mandatoryFields, Object.keys(experience));
-			if (missing.length) throw new Error(`Missing mandatory fields${missing}`);
+			if (missing.length) throw new Error({ code: 406, message: `Missing mandatory fields${missing}` });
 
 			experience.fromDate = new Date(experience.fromDate).toUTCString();
 			experience.toDate = new Date(experience.toDate).toUTCString();
@@ -31,7 +31,7 @@ const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experi
 			academics = _.pick(academics, preferredOrder);
 
 			const missing = missingFields(mandatoryFields, Object.keys(academics));
-			if (missing.length) throw new Error(`Missing mandatory fields${missing}`);
+			if (missing.length) throw new Error({ code: 406, message: `Missing mandatory fields${missing}` });
 
 			academics.fromDate = new Date(academics.fromDate).toUTCString();
 			academics.toDate = new Date(academics.toDate).toUTCString();
@@ -85,9 +85,9 @@ const preferredProfileOrder = ['personal', 'socialHandles', 'academics', 'experi
 
 			return res.status(200).json(newProfile);
 		}
-		catch ({ code = 503, message }) {
-			console.log(message);
-			res.status(code).json({ errorMessage: message });
+		catch (err) {
+			console.log(err);
+			return res.status(err.code || 500).json({ err });
 		}
 	};
 

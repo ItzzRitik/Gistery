@@ -14,8 +14,8 @@ const gitFetch = async (githubToken, query) => {
 
 				return resolve(response.data.viewer);
 			}
-			catch (e) {
-				return reject(e);
+			catch (err) {
+				return reject(err);
 			}
 		});
 	},

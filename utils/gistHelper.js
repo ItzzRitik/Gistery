@@ -56,8 +56,8 @@ const git = simpleGit(),
 				resolve(await sharp(filePath).resize(400, 400).jpeg({ mozjpeg: true }).toFile(`${profileDir}/${gistID}/${fileName}`));
 				return fs.rmSync(filePath, { force: true });
 			}
-			catch (e) {
-				return reject(e);
+			catch (err) {
+				return reject(err);
 			}
 		});
 	},
@@ -67,8 +67,8 @@ const git = simpleGit(),
 				fs.writeFileSync(`${profileDir}/${gistID}/${fileName}`, JSON.stringify(fileContent, null, 4), 'utf8');
 				return resolve();
 			}
-			catch (e) {
-				return reject(e);
+			catch (err) {
+				return reject(err);
 			}
 		});
 	},
@@ -79,8 +79,8 @@ const git = simpleGit(),
 				await git.commit(`Updated ${field}`);
 				return resolve(await git.push());
 			}
-			catch (e) {
-				return reject(e);
+			catch (err) {
+				return reject(err);
 			}
 		});
 	};
